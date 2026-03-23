@@ -1,5 +1,3 @@
-ipython
-ipywidgets
 numpy
 plotly
 pandas<3.0.0
