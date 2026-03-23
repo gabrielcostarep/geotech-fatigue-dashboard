@@ -1,4 +1,6 @@
+ipython
+ipywidgets
 numpy
-pandas<3.0.0
 plotly
+pandas<3.0.0
 streamlit>=1.30.0
