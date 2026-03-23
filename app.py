@@ -113,5 +113,43 @@ try:
         fig_2d.update_layout(xaxis_title="Deformação Axial (ea)", yaxis_title="Tensão Desviadora (q)", hovermode="closest", height=600)
         st.plotly_chart(fig_2d, use_container_width=True)
 
+    # ==========================================
+    # 5. DADOS BRUTOS (TABELA COM PAGINAÇÃO)
+    # ==========================================
+    st.divider()
+    st.subheader("📋 Tabela Completa de Dados")
+    st.markdown("Navegue por todos os ciclos processados sem sobrecarregar o sistema.")
+
+    col_pag1, col_pag2 = st.columns([1, 3])
+    
+    with col_pag1:
+        linhas_por_pagina = st.selectbox("Ciclos por página:", [100, 500, 1000, 5000], index=0)
+        
+        # Lógica matemática da paginação
+        total_paginas = (total_ciclos // linhas_por_pagina) + (1 if total_ciclos % linhas_por_pagina > 0 else 0)
+        
+        if total_paginas > 0:
+            pagina_atual = st.number_input(f"Página (1 a {total_paginas}):", min_value=1, max_value=total_paginas, value=1)
+        else:
+            pagina_atual = 1
+
+    with col_pag2:
+        if total_paginas > 0:
+            inicio = (pagina_atual - 1) * linhas_por_pagina
+            fim = inicio + linhas_por_pagina
+            
+            # Fatiando o DataFrame (mostrando só o pedaço da página atual)
+            df_pagina = df_energia.iloc[inicio:fim]
+            
+            st.dataframe(
+                df_pagina.style.format({
+                    'Number of cycles': '{:.0f}', 
+                    'Amortecimento': '{:.6f}'
+                }),
+                use_container_width=True,
+                height=400 # Fixa a altura da tabela para a página não ficar "pulando" de tamanho
+            )
+            st.caption(f"Exibindo ciclos {inicio + 1} a {min(fim, total_ciclos)} de um total de {total_ciclos}.")
+
 except FileNotFoundError:
     st.error(f"⚠️ O arquivo '{ARQUIVO}' não foi encontrado. Certifique-se de que o nome está correto e na mesma pasta.")
