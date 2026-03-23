@@ -8,7 +8,7 @@ import plotly.colors as pc
 # Configuração da página para ocupar a tela inteira
 st.set_page_config(page_title="Dashboard Geotécnico - Fadiga", layout="wide")
 
-st.title("🔬 Análise de Fadiga: Escória de Aciaria + Borracha")
+st.title("Análise de Fadiga: Escória de Aciaria + Borracha")
 st.markdown("""
 Este painel processa ensaios triaxiais cíclicos de longa duração. 
 A energia dissipada em cada ciclo é calculada geometricamente através do **Teorema de Shoelace (Fórmula de Gauss)**.
@@ -46,7 +46,7 @@ try:
     # 2. MÉTRICAS PRINCIPAIS (KPIs)
     # ==========================================
     st.divider()
-    st.subheader("📊 Resumo Estatístico do Amortecimento")
+    st.subheader("Resumo Estatístico do Amortecimento")
     
     col1, col2, col3, col4, col5 = st.columns(5)
     
@@ -69,14 +69,14 @@ try:
     col_macro1, col_macro2 = st.columns(2)
     
     with col_macro1:
-        st.subheader("📈 Evolução da Fadiga (Tendência)")
+        st.subheader("Evolução da Fadiga (Tendência)")
         fig_evolucao = px.line(df_energia, x='Number of cycles', y='Amortecimento', 
                                color_discrete_sequence=['#ff7f0e'])
         fig_evolucao.update_layout(xaxis_title="Número do Ciclo", yaxis_title="Amortecimento (J/m³)")
         st.plotly_chart(fig_evolucao, use_container_width=True)
 
     with col_macro2:
-        st.subheader("📉 Distribuição de Frequência")
+        st.subheader("Distribuição de Frequência")
         fig_dist = px.histogram(df_energia, x='Amortecimento', marginal='box', 
                                 nbins=50, color_discrete_sequence=['#1f77b4'])
         fig_dist.update_layout(xaxis_title="Amortecimento (J/m³)", yaxis_title="Frequência (Qtd. de Ciclos)")
@@ -86,7 +86,7 @@ try:
     # 4. ANÁLISE MICRO (INSPEÇÃO DE CICLOS)
     # ==========================================
     st.divider()
-    st.subheader("🔄 Inspeção Microestrutural: Ciclo de Histerese")
+    st.subheader("Inspeção Microestrutural: Ciclo de Histerese")
     
     ciclos_disponiveis = df_energia['Number of cycles'].tolist()
     ciclos_selecionados = st.multiselect(
@@ -117,8 +117,8 @@ try:
     # 5. DADOS BRUTOS (TABELA COM PAGINAÇÃO)
     # ==========================================
     st.divider()
-    st.subheader("📋 Tabela Completa de Dados")
-    st.markdown("Navegue por todos os ciclos processados sem sobrecarregar o sistema.")
+    st.subheader("Tabela Completa de Dados")
+    st.markdown("Navegue por todos os ciclos processados.")
 
     col_pag1, col_pag2 = st.columns([1, 3])
     
