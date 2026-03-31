@@ -5,42 +5,31 @@ import plotly.graph_objects as go
 import plotly.express as px
 import plotly.colors as pc
 
-# Configuração da página para ocupar a tela inteira
-st.set_page_config(page_title="Dashboard Geotécnico - Fadiga", layout="wide")
+st.set_page_config(page_title="Dashboard Geotecnico - Fadiga", layout="wide")
 
 st.title("Análise de Fadiga: Escória de Aciaria + Borracha")
 st.markdown("""
-Este painel processa ensaios triaxiais cíclicos de longa duração. 
-A energia dissipada em cada ciclo é calculada geometricamente através do **Teorema de Shoelace (Fórmula de Gauss)**.
+Este painel visualiza ensaios triaxiais cíclicos de longa duração. 
+A energia dissipada em cada ciclo (amortecimento) foi pré-calculada geometricamente através do **Teorema de Shoelace (Fórmula de Gauss)**.
 """)
 
 # ==========================================
-# 1. FUNÇÃO DE ALTA PERFORMANCE (BIG DATA)
+# 1. CARREGAMENTO DE ALTA PERFORMANCE (CACHE)
 # ==========================================
-ARQUIVO = 'planilha curta.csv'
+ARQUIVO = 'dados_processados.parquet'
 
 @st.cache_data
-def carregar_e_calcular(caminho_arquivo):
-    df = pd.read_csv(caminho_arquivo)
-    df = df.dropna(subset=['ea', 'q', 'Number of cycles'])
+def carregar_dados_prontos():
+    df_completo = pd.read_parquet(ARQUIVO)
     
-    # Função vetorizada para o Teorema de Shoelace
-    def calcular_shoelace(grupo):
-        x = grupo['ea'].values
-        y = grupo['q'].values
-        return 0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
-
-    # Agrupa e calcula a energia. include_groups=False resolve o aviso (FutureWarning) do Pandas no terminal!
-    df_energia = df.groupby('Number of cycles').apply(calcular_shoelace, include_groups=False).reset_index(name='Amortecimento')
+    # Isola a energia (1 valor por ciclo) para as análises macro
+    df_energia = df_completo[['Number of cycles', 'Amortecimento']].drop_duplicates().reset_index(drop=True)
     
-    # Converte de kJ/m³ para J/m³ para facilitar a visualização
-    df_energia['Amortecimento'] = df_energia['Amortecimento'] * 1000
-    
-    return df, df_energia
+    return df_completo, df_energia
 
 try:
-    with st.spinner("Processando ciclos de histerese..."):
-        df_bruto, df_energia = carregar_e_calcular(ARQUIVO)
+    with st.spinner("Carregando o banco de dados otimizado..."):
+        df_bruto, df_energia = carregar_dados_prontos()
     
     # ==========================================
     # 2. MÉTRICAS PRINCIPAIS (KPIs)
@@ -89,10 +78,21 @@ try:
     st.subheader("Inspeção Microestrutural: Ciclo de Histerese")
     
     ciclos_disponiveis = df_energia['Number of cycles'].tolist()
+    
+    # Lógica para pegar Início, Meio e Fim
+    if len(ciclos_disponiveis) >= 3:
+        ciclos_padrao = [
+            ciclos_disponiveis[0],                                  # Primeiro ciclo (Início)
+            ciclos_disponiveis[len(ciclos_disponiveis) // 2],       # Ciclo do meio
+            ciclos_disponiveis[-1]                                  # Último ciclo (Fim)
+        ]
+    else:
+        ciclos_padrao = ciclos_disponiveis
+
     ciclos_selecionados = st.multiselect(
-        "Selecione os Ciclos para sobrepor e analisar:", 
+        "Selecione os Ciclos para sobrepor e analisar a deformação plástica:", 
         options=ciclos_disponiveis,
-        default=ciclos_disponiveis[:3] if len(ciclos_disponiveis) >= 3 else ciclos_disponiveis
+        default=ciclos_padrao
     )
     
     qtd_ciclos = len(ciclos_selecionados)
@@ -102,8 +102,10 @@ try:
         fig_2d = go.Figure()
         
         for i, ciclo in enumerate(sorted(ciclos_selecionados)):
+            # Puxa os pontos exatos (ea, q) do ciclo escolhido
             dados_grafico = df_bruto[df_bruto['Number of cycles'] == ciclo]
             
+            # Fecha o laço visualmente conectando o último ponto ao primeiro
             x_hist = np.append(dados_grafico['ea'].values, dados_grafico['ea'].values[0])
             y_hist = np.append(dados_grafico['q'].values, dados_grafico['q'].values[0])
             
@@ -118,7 +120,7 @@ try:
     # ==========================================
     st.divider()
     st.subheader("Tabela Completa de Dados")
-    st.markdown("Navegue por todos os ciclos processados.")
+    st.markdown("Navegue por todos os ciclos processados sem sobrecarregar a memória do navegador.")
 
     col_pag1, col_pag2 = st.columns([1, 3])
     
@@ -147,9 +149,9 @@ try:
                     'Amortecimento': '{:.6f}'
                 }),
                 use_container_width=True,
-                height=400 # Fixa a altura da tabela para a página não ficar "pulando" de tamanho
+                height=400
             )
             st.caption(f"Exibindo ciclos {inicio + 1} a {min(fim, total_ciclos)} de um total de {total_ciclos}.")
 
 except FileNotFoundError:
-    st.error(f"⚠️ O arquivo '{ARQUIVO}' não foi encontrado. Certifique-se de que o nome está correto e na mesma pasta.")
+    st.error(f"O arquivo '{ARQUIVO}' não foi encontrado. Certifique-se de que ele está na mesma pasta que o app.py.")
