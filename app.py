@@ -77,20 +77,21 @@ try:
     st.divider()
     st.subheader("Inspeção Microestrutural: Ciclo de Histerese")
     
-    ciclos_disponiveis = df_energia['Number of cycles'].tolist()
+    # O arquivo MICRO agora só tem os ciclos espaçados (ex: 1, 10000, 20000...)
+    ciclos_disponiveis = df_bruto['Number of cycles'].unique().tolist()
     
-    # Lógica inteligente para pegar Início, Meio e Fim
+    # Seleciona Início, Meio e Fim dinamicamente
     if len(ciclos_disponiveis) >= 3:
         ciclos_padrao = [
-            ciclos_disponiveis[0],                                  # Primeiro ciclo (Início)
-            ciclos_disponiveis[len(ciclos_disponiveis) // 2],       # Ciclo do meio
-            ciclos_disponiveis[-1]                                  # Último ciclo (Fim)
+            ciclos_disponiveis[0], 
+            ciclos_disponiveis[len(ciclos_disponiveis) // 2], 
+            ciclos_disponiveis[-1]
         ]
     else:
         ciclos_padrao = ciclos_disponiveis
 
     ciclos_selecionados = st.multiselect(
-        "Selecione os Ciclos para sobrepor e analisar a deformação plástica:", 
+        "Selecione os Ciclos (Amostragem de 10k em 10k) para sobrepor:", 
         options=ciclos_disponiveis,
         default=ciclos_padrao
     )
@@ -102,10 +103,8 @@ try:
         fig_2d = go.Figure()
         
         for i, ciclo in enumerate(sorted(ciclos_selecionados)):
-            # Puxa os pontos exatos (ea, q) do ciclo escolhido
             dados_grafico = df_bruto[df_bruto['Number of cycles'] == ciclo]
             
-            # Fecha o laço visualmente conectando o último ponto ao primeiro
             x_hist = np.append(dados_grafico['ea'].values, dados_grafico['ea'].values[0])
             y_hist = np.append(dados_grafico['q'].values, dados_grafico['q'].values[0])
             
