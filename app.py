@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 import plotly.colors as pc
 
+# Configuração da página para ocupar a tela inteira (sem emoji no título)
 st.set_page_config(page_title="Dashboard Geotecnico - Fadiga", layout="wide")
 
 st.title("Análise de Fadiga: Escória de Aciaria + Borracha")
@@ -16,19 +17,18 @@ A energia dissipada em cada ciclo (amortecimento) foi pré-calculada geometricam
 # ==========================================
 # 1. CARREGAMENTO DE ALTA PERFORMANCE (CACHE)
 # ==========================================
-ARQUIVO = 'dados_processados.parquet'
+ARQUIVO_MACRO = 'macro_energia.parquet'
+ARQUIVO_MICRO = 'micro_histerese.parquet'
 
 @st.cache_data
 def carregar_dados_prontos():
-    df_completo = pd.read_parquet(ARQUIVO)
-    
-    # Isola a energia (1 valor por ciclo) para as análises macro
-    df_energia = df_completo[['Number of cycles', 'Amortecimento']].drop_duplicates().reset_index(drop=True)
-    
-    return df_completo, df_energia
+    # Lê os dois arquivos otimizados separadamente
+    df_energia = pd.read_parquet(ARQUIVO_MACRO)
+    df_bruto = pd.read_parquet(ARQUIVO_MICRO)
+    return df_bruto, df_energia
 
 try:
-    with st.spinner("Carregando o banco de dados otimizado..."):
+    with st.spinner("Carregando banco de dados otimizado para nuvem..."):
         df_bruto, df_energia = carregar_dados_prontos()
     
     # ==========================================
@@ -79,7 +79,7 @@ try:
     
     ciclos_disponiveis = df_energia['Number of cycles'].tolist()
     
-    # Lógica para pegar Início, Meio e Fim
+    # Lógica inteligente para pegar Início, Meio e Fim
     if len(ciclos_disponiveis) >= 3:
         ciclos_padrao = [
             ciclos_disponiveis[0],                                  # Primeiro ciclo (Início)
