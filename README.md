@@ -1,4 +1,4 @@
-# 🔬 <a href="https://geotech-fatigue-dashboard-acej7cuw8m9fpwdcnvc5nb.streamlit.app">Dashboard Geotécnico: Análise de Fadiga e Histerese</a>
+# 🔬 <a href="https://geotech-fatigue-dashboard-acej7cuw8m9fpwdcnvc5nb.streamlit.app" target="_blank">Dashboard Geotécnico: Análise de Fadiga e Histerese</a>
 
 🚧 **Status do Projeto:** Em desenvolvimento (Work In Progress) 🚧
 
